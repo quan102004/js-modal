@@ -1,18 +1,9 @@
 const $ = document.querySelector.bind(document);
 const $$ = document.querySelectorAll.bind(document);
 
-/* <div id="modal-1" class="modal-backdrop">
-            <div class="modal-container">
-                <button class="modal-close">&times;</button>
-                <div class="modal-content">
-                    <p>Modal 1</p>
-                </div>
-            </div>
-        </div> */
-
 function Modal() {
     this.openModal = (options = {}) => {
-        const { templateId } = options;
+        const { templateId, allowBackdropClose = true } = options;
         const template = $(` #${templateId} `);
 
         if (!template) {
@@ -50,21 +41,32 @@ function Modal() {
 
         // Attack event listener
         closeBtn.onclick = () => this.closeModal(backdrop);
-        backdrop.onclick = (e) => {
-            if (e.target === backdrop) {
-                this.closeModal(backdrop);
-            }
-        };
+
+        if (allowBackdropClose) {
+            backdrop.onclick = (e) => {
+                if (e.target === backdrop) {
+                    this.closeModal(backdrop);
+                }
+            };
+        }
+
         document.addEventListener("keydown", (e) => {
             if (e.key === "Escape") {
                 this.closeModal(backdrop);
             }
         });
+
+        // Disable scrolling
+        document.body.classList.add("no-scroll");
+
+        return backdrop;
     };
     this.closeModal = (modalElement) => {
         modalElement.classList.remove("show");
         modalElement.ontransitionend = () => {
             modalElement.remove();
+            // Enable scrolling
+            document.body.classList.remove("no-scroll");
         };
     };
 }
@@ -72,13 +74,29 @@ function Modal() {
 const modal = new Modal();
 
 $("#open-modal-1").onclick = () => {
-    modal.openModal({
+    const modalElement = modal.openModal({
         templateId: "modal-1",
     });
+
+    const img = modalElement.querySelector("#img");
+    console.log(img);
 };
 
 $("#open-modal-2").onclick = () => {
-    modal.openModal({
+    const modalElement = modal.openModal({
         templateId: "modal-2",
+        allowBackdropClose: false,
     });
+
+    const form = modalElement.querySelector("#login-form");
+    if (form) {
+        form.onsubmit = (e) => {
+            e.preventDefault();
+            const formData = {
+                email: $("#email").value.trim(),
+                password: $("#password").value.trim(),
+            };
+            console.log(formData);
+        };
+    }
 };
