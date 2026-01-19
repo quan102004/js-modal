@@ -2,20 +2,33 @@ const $ = document.querySelector.bind(document);
 const $$ = document.querySelectorAll.bind(document);
 
 function Modal() {
+    function getScrollbarWidth() {
+        const div = document.createElement("div");
+        Object.assign(div.style, {
+            overflow: "scroll",
+            position: "absolute",
+            top: "-9999px",
+        });
+
+        document.body.appendChild(div);
+        const scrollbarWidth = div.offsetWidth - div.clientWidth;
+        document.body.removeChild(div);
+
+        return scrollbarWidth;
+    }
+
     this.openModal = (options = {}) => {
         const { templateId, allowBackdropClose = true } = options;
-        const template = $(` #${templateId} `);
+        const template = $(`#${templateId}`);
 
         if (!template) {
-            console.error(` ${templateId} does not exist!`);
+            console.error(`#${templateId} does not exist!`);
             return;
         }
 
         const content = template.content.cloneNode(true);
 
-        console.log(content);
-
-        // Create modal element
+        // Create modal elements
         const backdrop = document.createElement("div");
         backdrop.className = "modal-backdrop";
 
@@ -39,7 +52,11 @@ function Modal() {
             backdrop.classList.add("show");
         }, 0);
 
-        // Attack event listener
+        // Disable scrolling
+        document.body.classList.add("no-scroll");
+        document.body.style.paddingRight = getScrollbarWidth() + "px";
+
+        // Attach event listeners
         closeBtn.onclick = () => this.closeModal(backdrop);
 
         if (allowBackdropClose) {
@@ -56,17 +73,17 @@ function Modal() {
             }
         });
 
-        // Disable scrolling
-        document.body.classList.add("no-scroll");
-
         return backdrop;
     };
+
     this.closeModal = (modalElement) => {
         modalElement.classList.remove("show");
         modalElement.ontransitionend = () => {
             modalElement.remove();
+
             // Enable scrolling
             document.body.classList.remove("no-scroll");
+            document.body.style.paddingRight = "";
         };
     };
 }
@@ -78,7 +95,7 @@ $("#open-modal-1").onclick = () => {
         templateId: "modal-1",
     });
 
-    const img = modalElement.querySelector("#img");
+    const img = modalElement.querySelector("img");
     console.log(img);
 };
 
@@ -96,6 +113,7 @@ $("#open-modal-2").onclick = () => {
                 email: $("#email").value.trim(),
                 password: $("#password").value.trim(),
             };
+
             console.log(formData);
         };
     }
