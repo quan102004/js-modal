@@ -1,6 +1,8 @@
 const $ = document.querySelector.bind(document);
 const $$ = document.querySelectorAll.bind(document);
 
+Modal.elements = [];
+
 function Modal(options = {}) {
     const {
         templateId,
@@ -80,7 +82,6 @@ function Modal(options = {}) {
             if (this._footerContent) {
                 this._modalFooter.innerHTML = this._footerContent;
             }
-
             this._footerButtons.forEach((button) => {
                 this._modalFooter.append(button);
             });
@@ -111,6 +112,8 @@ function Modal(options = {}) {
     };
 
     this.open = () => {
+        Modal.elements.push(this);
+
         if (!this._backdrop) {
             this._build();
         }
@@ -124,21 +127,16 @@ function Modal(options = {}) {
         document.body.style.paddingRight = getScrollbarWidth() + "px";
 
         // Attach event listeners
-
         if (this._allowBackdropClose) {
             this._backdrop.onclick = (e) => {
                 if (e.target === this._backdrop) {
-                    this.close(this._backdrop);
+                    this.close();
                 }
             };
         }
 
         if (this._allowEscapeClose) {
-            document.addEventListener("keydown", (e) => {
-                if (e.key === "Escape") {
-                    this.close();
-                }
-            });
+            document.addEventListener("keydown", this._handleEscapeKey);
         }
 
         this._onTransitionEnd(() => {
@@ -146,6 +144,13 @@ function Modal(options = {}) {
         });
 
         return this._backdrop;
+    };
+
+    this._handleEscapeKey = (e) => {
+        const lastModal = Modal.elements[Modal.elements.length - 1];
+        if (e.key === "Escape" && this === lastModal) {
+            this.close();
+        }
     };
 
     this._onTransitionEnd = (callback) => {
@@ -156,7 +161,13 @@ function Modal(options = {}) {
     };
 
     this.close = (destroy = destroyOnClose) => {
+        Modal.elements.pop();
+
         this._backdrop.classList.remove("show");
+
+        if (this._allowEscapeClose) {
+            document.removeEventListener("keydown", this._handleEscapeKey);
+        }
 
         this._onTransitionEnd(() => {
             if (this._backdrop && destroy) {
@@ -166,12 +177,15 @@ function Modal(options = {}) {
             }
 
             // Enable scrolling
-            document.body.classList.remove("no-scroll");
-            document.body.style.paddingRight = "";
+            if (!Modal.elements.length) {
+                document.body.classList.remove("no-scroll");
+                document.body.style.paddingRight = "";
+            }
 
             if (typeof onClose === "function") onClose();
         });
     };
+
     this.destroy = () => {
         this.close(true);
     };
@@ -189,10 +203,7 @@ const modal1 = new Modal({
 });
 
 $("#open-modal-1").onclick = () => {
-    const modalElement = modal1.open();
-
-    // const img = modalElement.querySelector("img");
-    // console.log(img);
+    modal1.open();
 };
 
 const modal2 = new Modal({
@@ -226,8 +237,8 @@ $("#open-modal-2").onclick = () => {
 
 const modal3 = new Modal({
     templateId: "modal-3",
+    closeMethods: ["escape"],
     footer: true,
-    cssClass: ["class1", "class2", "classN"],
     onOpen: () => {
         console.log("Modal 3 opened");
     },
@@ -236,7 +247,7 @@ const modal3 = new Modal({
     },
 });
 
-// modal3.setFooterContent("<h2>Footer Content</h2>");
+// modal3.setFooterContent("<h2>Footer content</h2>");
 
 modal3.addFooterButton("Danger", "modal-btn danger pull-left", (e) => {
     alert("Danger clicked!");
@@ -251,4 +262,6 @@ modal3.addFooterButton("<span>Agree</span>", "modal-btn primary", (e) => {
     modal3.close();
 });
 
-modal3.open();
+$("#open-modal-3").onclick = () => {
+    modal3.open();
+};
