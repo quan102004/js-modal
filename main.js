@@ -81,6 +81,10 @@ function Modal(options = {}) {
                 this._modalFooter.innerHTML = this._footerContent;
             }
 
+            this._footerButtons.forEach((button) => {
+                this._modalFooter.append(button);
+            });
+
             container.append(this._modalFooter);
         }
 
@@ -93,6 +97,17 @@ function Modal(options = {}) {
         if (this._modalFooter) {
             this._modalFooter.innerHTML = html;
         }
+    };
+
+    this._footerButtons = [];
+
+    this.addFooterButton = (title, cssClass, callback) => {
+        const button = document.createElement("button");
+        button.className = cssClass;
+        button.innerHTML = title;
+        button.onclick = callback;
+
+        this._footerButtons.push(button);
     };
 
     this.open = () => {
@@ -221,6 +236,19 @@ const modal3 = new Modal({
     },
 });
 
-modal3.setFooterContent("<h2>Footer Content</h2>");
+// modal3.setFooterContent("<h2>Footer Content</h2>");
+
+modal3.addFooterButton("Danger", "modal-btn danger pull-left", (e) => {
+    alert("Danger clicked!");
+});
+
+modal3.addFooterButton("Cancel", "modal-btn", (e) => {
+    modal3.close();
+});
+
+modal3.addFooterButton("<span>Agree</span>", "modal-btn primary", (e) => {
+    // Something...
+    modal3.close();
+});
 
 modal3.open();
